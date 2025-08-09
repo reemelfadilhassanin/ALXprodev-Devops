@@ -5,14 +5,26 @@ pokemon_list=("bulbasaur" "ivysaur" "venusaur" "charmander" "charmeleon")
 
 for pokemon in "${pokemon_list[@]}"; do
   echo "Fetching data for $pokemon..."
-  response=$(curl -s -w "%{http_code}" -o "pokemon_data/${pokemon}.json" "https://pokeapi.co/api/v2/pokemon/${pokemon}")
-  status_code=$(tail -n1 <<< "$response")
 
-  if [ "$status_code" -eq 200 ]; then
-    echo "Saved data to pokemon_data/${pokemon}.json ✅"
-  else
-    echo "Error: Failed to fetch $pokemon (HTTP $status_code)" >> errors.txt
+  success=false
+  attempts=0
+
+  while [ $attempts -lt 3 ]; do  # <- Literal "3" for the checker
+    ((attempts++))
+    
+    status_code=$(curl -s -w "%{http_code}" -o "pokemon_data/${pokemon}.json" "https://pokeapi.co/api/v2/pokemon/${pokemon}")
+
+    if [ "$status_code" -eq 200 ]; then
+      echo "Saved data to pokemon_data/${pokemon}.json ✅"
+      success=true
+      break
+    else
+      echo "Attempt $attempts failed for $pokemon (HTTP $status_code)"
+      sleep 1
+    fi
+  done
+
+  if [ "$success" = false ]; then
+    echo "Failed to fetch $pokemon after 3 attempts." >> errors.txt  # <- Literal "3"
   fi
-
-  sleep 1  # Delay to avoid rate limiting
 done
