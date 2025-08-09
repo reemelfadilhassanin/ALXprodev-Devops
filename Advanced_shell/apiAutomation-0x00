@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# Fetch data for Pikachu from the PokeAPI
+response=$(curl -s -w "%{http_code}" -o data.json https://pokeapi.co/api/v2/pokemon/pikachu)
+
+# Extract the HTTP status code
+status_code=$(tail -n1 <<< "$response")
+
+# If not 200, log the error
+if [ "$status_code" -ne 200 ]; then
+  echo "Error: Failed to fetch Pikachu data. HTTP Status: $status_code" >> errors.txt
+fi
